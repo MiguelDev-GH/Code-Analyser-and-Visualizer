@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* Garante que o container do React Flow ocupe a tela toda */
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Remove margens padrão do navegador */
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Estilização opcional para deixar as linhas (edges) do React Flow mais suaves */
+.react-flow__edge-path {
+  stroke-width: 2;
+  stroke: #cbd5e1;
+}
+
+.react-flow__controls {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border: none;
+}
