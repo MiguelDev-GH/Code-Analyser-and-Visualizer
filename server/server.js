@@ -16,7 +16,7 @@ app.post('/api/analyze', async (req, res) => {
     const { code } = req.body;
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-3.1-flash-lite",
       generationConfig: {
         responseMimeType: "application/json",
       }
@@ -52,12 +52,24 @@ app.post('/api/analyze', async (req, res) => {
       ${code}
     `;
 
+    console.log('Enviando prompt para Gemini...');
     const result = await model.generateContent(prompt);
+    console.log('Resposta recebida:', result.response.text());
     const responseText = result.response.text();
     
-    res.json(JSON.parse(responseText));
+    let parsed;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Erro ao parsear JSON:', parseError);
+      console.error('Resposta bruta:', responseText);
+      throw new Error('Resposta da IA não é JSON válido');
+    }
+    
+    res.json(parsed);
 
   } catch (error) {
+    console.error('Erro detalhado:', error);
     res.status(500).json({ error: 'Erro ao processar o código' });
   }
 });
