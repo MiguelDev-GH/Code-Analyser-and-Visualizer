@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import ReactFlow, { 
   Background, 
   Controls, 
@@ -68,6 +68,37 @@ export default function App() {
   const onNodeClick = (_, node) => {
     setSelectedNode(node);
   };
+
+  // --- Adicione este trecho DENTRO do seu componente App, antes de analisCodigo ---
+const { previousNodes, nextDirectNodes, nextExceptionNodes } = useMemo(() => {
+    if (!selectedNode) return { previousNodes: [], nextDirectNodes: [], nextExceptionNodes: [] };
+
+    // Encontra blocos anteriores (conexões chegando no bloco selecionado)
+    const incomingEdges = edges.filter(edge => edge.target === selectedNode.id);
+    const previousNodes = incomingEdges.map(edge => nodes.find(node => node.id === edge.source)).filter(Boolean);
+
+    // Encontra blocos seguintes (conexões saindo do bloco selecionado)
+    const outgoingEdges = edges.filter(edge => edge.source === selectedNode.id);
+    const nextDirectNodes = [];
+    const nextExceptionNodes = [];
+
+    outgoingEdges.forEach(edge => {
+      const targetNode = nodes.find(node => node.id === edge.target);
+      if (!targetNode) return;
+
+      // Verifica se a conexão é uma exceção ou direta baseada na cor do estilo
+      const strokeColor = edge.style?.stroke || '';
+      const isException = strokeColor === '#ef4444'; // Cor vermelha para exceções
+
+      if (isException) {
+        nextExceptionNodes.push(targetNode);
+      } else {
+        nextDirectNodes.push(targetNode);
+      }
+    });
+
+    return { previousNodes, nextDirectNodes, nextExceptionNodes };
+}, [selectedNode, edges, nodes]);
 
   const analisarCodigo = async () => {
     if (!inputCode.trim()) return;
@@ -150,12 +181,69 @@ export default function App() {
           <footer className="dashboard">
             <div className="dashboard-content">
               <section className="info-section">
-                <h2 className="info-title">
-                  {selectedNode ? selectedNode.data.label : 'Select a node'}
-                </h2>
-                <p className="info-desc">
-                  {selectedNode ? selectedNode.data.description : 'Waiting for selection...'}
-                </p>
+                <div className="description-container">
+                  <h2 className="info-title">
+                    {selectedNode ? selectedNode.data.label : 'Select a node'}
+                  </h2>
+                  <p className="info-desc">
+                    {selectedNode ? selectedNode.data.description : 'Waiting for selection...'}
+                  </p>
+                </div>
+                
+                {selectedNode && (
+                  <div className="connections-status-bar">
+                    {/* Grupo 1: Anteriores (Chegando) */}
+                    {previousNodes.length > 0 && (
+                      <div className="status-category-block category-previous">
+                        {previousNodes.map(node => (
+                          <div key={node.id} className="status-item">
+                            <span className="status-text">{node.data.label}</span>
+                            <div className="status-icon status-icon-incoming">
+                              {/* Ícone: Setinha da esquerda entrando em uma caixinha */}
+                              <svg viewBox="0 0 16 16" width="16" height="16">
+                                <path d="M 0 8 L 8 0 L 8 6 L 16 6 L 16 10 L 8 10 L 8 16 L 0 8" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                              </svg>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Grupo 2: Exceção (Saindo por erro) */}
+                    {nextExceptionNodes.length > 0 && (
+                      <div className="status-category-block category-exception">
+                        {nextExceptionNodes.map(node => (
+                          <div key={node.id} className="status-item">
+                            <span className="status-text">{node.data.label}</span>
+                            <div className="status-icon status-icon-up">
+                              {/* Ícone: Setinha para cima saindo de uma caixinha */}
+                              <svg viewBox="0 0 16 16" width="16" height="16">
+                                <path d="M 6 16 L 10 16 L 10 8 L 16 8 L 8 0 L 0 8 L 6 8 L 6 16" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                              </svg>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Grupo 3: Próximos (Saindo direto) */}
+                    {nextDirectNodes.length > 0 && (
+                      <div className="status-category-block category-next">
+                        {nextDirectNodes.map(node => (
+                          <div key={node.id} className="status-item">
+                            <span className="status-text">{node.data.label}</span>
+                            <div className="status-icon status-icon-direct">
+                              {/* Ícone: Setinha para direita saindo de uma caixinha */}
+                              <svg viewBox="0 0 16 16" width="16" height="16">
+                                <path d="M 0 6 L 8 6 L 8 0 L 16 8 L 8 16 L 8 10 L 0 10 L 0 6" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                              </svg>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
               
               <section className="functions-section">
