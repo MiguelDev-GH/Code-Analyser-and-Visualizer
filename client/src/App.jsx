@@ -18,7 +18,8 @@ const getLayoutedElements = (nodes, edges, direction = 'LR') => {
   dagreGraph.setGraph({ rankdir: direction });
 
   nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 250, height: 100 });
+    // Usamos larguras fixas baseadas no seu design original
+    dagreGraph.setNode(node.id, { width: 200, height: 80 }); 
   });
 
   edges.forEach((edge) => {
@@ -27,20 +28,22 @@ const getLayoutedElements = (nodes, edges, direction = 'LR') => {
 
   dagre.layout(dagreGraph);
 
-  nodes.forEach((node) => {
+  const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
     node.targetPosition = isHorizontal ? Position.Left : Position.Top;
     node.sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
     
     node.position = {
-      x: nodeWithPosition.x - 125,
-      y: nodeWithPosition.y - 50,
+      x: nodeWithPosition.x - 100, // Ajuste baseado na metade da largura (200/2)
+      y: nodeWithPosition.y - 40,  // Ajuste baseado na metade da altura (80/2)
     };
     
     return node;
   });
 
-  return { nodes, edges };
+  const layoutedEdges = edges.map((edge) => edge);
+
+  return { nodes: layoutedNodes, edges: layoutedEdges };
 };
 
 const initialNodes = [];
@@ -91,7 +94,8 @@ export default function App() {
         setSelectedNode(layoutedNodes[0]);
       }
     } catch (error) {
-      alert('Erro ao analisar o código. Verifique se o backend está rodando.');
+      console.error('Error analyzing the code:', error);
+      alert('Error analyzing the code. Verify that the backend is running. Detailed error in console.');
     } finally {
       setLoading(false);
     }
@@ -102,16 +106,16 @@ export default function App() {
       <header className="header">
         <div className="header-logo-area">
           <span className="logo-dots">:::</span>
-          <h1 className="logo-text">Código #1</h1>
+          <h1 className="logo-text">Code #1</h1>
         </div>
-        {loading && <span className="loading-text">Analisando arquitetura com IA...</span>}
+        {loading && <span className="loading-text">Analyzing architecture with AI...</span>}
       </header>
 
       <div className="main-wrapper">
         
         <aside className="sidebar">
           <label className="sidebar-label">
-            Cole seu código aqui
+            Paste your code here
           </label>
           <textarea 
             className="sidebar-textarea"
@@ -124,7 +128,7 @@ export default function App() {
             disabled={loading || !inputCode.trim()}
             className="analyze-btn"
           >
-            {loading ? 'Processando...' : 'Analisar Arquitetura'}
+            {loading ? 'Processing...' : 'Analyze Architecture'}
           </button>
         </aside>
 
@@ -147,10 +151,10 @@ export default function App() {
             <div className="dashboard-content">
               <section className="info-section">
                 <h2 className="info-title">
-                  {selectedNode ? selectedNode.data.label : 'Selecione um bloco'}
+                  {selectedNode ? selectedNode.data.label : 'Select a node'}
                 </h2>
                 <p className="info-desc">
-                  {selectedNode ? selectedNode.data.description : 'Aguardando seleção...'}
+                  {selectedNode ? selectedNode.data.description : 'Waiting for selection...'}
                 </p>
               </section>
               
@@ -166,7 +170,7 @@ export default function App() {
                       </div>
                     ))
                   ) : (
-                        <div className="function-empty">Nenhuma função detectada</div>
+                        <div className="function-empty">No functions detected</div>
                   )}
                 </div>
               </section>
@@ -185,7 +189,7 @@ export default function App() {
                <div className="status-item">
                  <span>Status</span>
                  <span className="status-arrow">→</span>
-                 <span className="status-active">{selectedNode ? 'Bloco Ativo' : 'Aguardando'}</span>
+                 <span className="status-active">{selectedNode ? 'Active Node' : 'Waiting'}</span>
                </div>
             </div>
           </footer>

@@ -23,36 +23,40 @@ app.post('/api/analyze', async (req, res) => {
     });
 
     const prompt = `
-      Analise o código abaixo e gere um mapa mental da arquitetura.
-      Retorne APENAS um JSON válido seguindo esta estrutura exata para o React Flow:
+      Analyze the code below and generate a mental map of the architecture.
+      Return ONLY a valid JSON following this exact structure for React Flow:
       {
         "nodes": [
           {
-            "id": "string única",
-            "position": { "x": numero_aleatorio_entre_0_e_500, "y": numero_aleatorio_entre_0_e_300 },
+            "id": "unique_string",
             "data": { 
-              "label": "Nome Principal do Bloco, demonstra uma ação (Ex: Busca Usuários na API, Verifica o Login)",
-              "description": "Resumo de até 15 palavras do que esse bloco faz",
-              "code": "O trecho de código exato referente a este bloco",
-              "functions": ["nomeFuncao1", "nomeFuncao2"]
+              "label": "Main Action Name (e.g., Fetch Data, Validate Input)",
+              "description": "Summary up to MAX 30 words, most legible and concise possible",
+              "code": "Exact full code snippet",
+              "functions": ["func1", "func2"]
             }
           }
         ],
         "edges": [
           {
-            "id": "string_unica",
-            "source": "id_do_node_origem",
-            "target": "id_do_node_destino",
-            "label": "Motivo da conexão (ex: Chama API)"
+            "id": "unique_string",
+            "source": "source_id",
+            "target": "target_id",
+            "label": "Connection reason (e.g., If Valid, On Error)",
+            "style": { 
+              "stroke": "Determine the color based on context: '#22c55e' (green) for success/valid paths, '#ef4444' (red) for error/exception paths, or '#b1b1b7' (gray) for default/neutral flows.",
+              "strokeWidth": 2
+            },
+            "labelStyle": { "fill": "Match the stroke color", "fontWeight": 700 }
           }
         ]
       }
 
-      Código para analisar:
+      Code to analyze:
       ${code}
     `;
 
-    console.log('Sending propmt to AI...');
+    console.log('Sending prompt to AI...');
     const result = await model.generateContent(prompt);
     console.log('Response: ', result.response.text());
     const responseText = result.response.text();
@@ -61,21 +65,21 @@ app.post('/api/analyze', async (req, res) => {
     try {
       parsed = JSON.parse(responseText);
     } catch (parseError) {
-      console.error('Error to parse JSON:', parseError);
-      console.error('Brute response:', responseText);
-      throw new Error('AI response, its not a correct JSON');
+      console.error('Error parsing JSON:', parseError);
+      console.error('Raw response:', responseText);
+      throw new Error('AI response is not a valid JSON');
     }
     
     res.json(parsed);
 
   } catch (error) {
-    console.error('Erro detalhado:', error);
-    res.status(500).json({ error: 'Erro ao processar o código' });
+    console.error('Detailed error:', error);
+    res.status(500).json({ error: 'Error processing the code' });
   }
 });
 
 let PORT = process.env.PORT
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
   console.log(`Server running in PORT ${PORT}`);
 });
