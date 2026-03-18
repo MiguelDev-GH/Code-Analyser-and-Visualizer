@@ -31,7 +31,7 @@ app.post('/api/analyze', async (req, res) => {
             "id": "string única",
             "position": { "x": numero_aleatorio_entre_0_e_500, "y": numero_aleatorio_entre_0_e_300 },
             "data": { 
-              "label": "Nome Principal do Bloco",
+              "label": "Nome Principal do Bloco, demonstra uma ação (Ex: Busca Usuários na API, Verifica o Login)",
               "description": "Resumo de até 15 palavras do que esse bloco faz",
               "code": "O trecho de código exato referente a este bloco",
               "functions": ["nomeFuncao1", "nomeFuncao2"]
@@ -52,18 +52,18 @@ app.post('/api/analyze', async (req, res) => {
       ${code}
     `;
 
-    console.log('Enviando prompt para Gemini...');
+    console.log('Sending propmt to AI...');
     const result = await model.generateContent(prompt);
-    console.log('Resposta recebida:', result.response.text());
+    console.log('Response: ', result.response.text());
     const responseText = result.response.text();
     
     let parsed;
     try {
       parsed = JSON.parse(responseText);
     } catch (parseError) {
-      console.error('Erro ao parsear JSON:', parseError);
-      console.error('Resposta bruta:', responseText);
-      throw new Error('Resposta da IA não é JSON válido');
+      console.error('Error to parse JSON:', parseError);
+      console.error('Brute response:', responseText);
+      throw new Error('AI response, its not a correct JSON');
     }
     
     res.json(parsed);
@@ -74,6 +74,8 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
+let PORT = process.env.PORT
+
 app.listen(3000, () => {
-  console.log('Servidor rodando na porta 3000');
+  console.log(`Server running in PORT ${PORT}`);
 });
