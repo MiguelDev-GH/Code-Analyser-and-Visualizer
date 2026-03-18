@@ -1,27 +1,257 @@
-@import "tailwindcss";
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
 
-/* Garante que o container do React Flow ocupe a tela toda */
-#root {
-  width: 100vw;
+.app-container {
+  width: 100%;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  font-family: ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Remove margens padrão do navegador */
-body {
+.header {
+  height: 3.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  flex-shrink: 0;
+  justify-content: space-between;
+}
+
+.header-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-dots {
+  color: #9ca3af;
+  font-size: 1.25rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+}
+
+.logo-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
   margin: 0;
-  padding: 0;
+}
+
+.loading-text {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #3b82f6;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.main-wrapper {
+  flex-grow: 1;
+  display: flex;
   overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Estilização opcional para deixar as linhas (edges) do React Flow mais suaves */
-.react-flow__edge-path {
-  stroke-width: 2;
-  stroke: #cbd5e1;
+.sidebar {
+  width: 20rem;
+  border-right: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  z-index: 10;
 }
 
-.react-flow__controls {
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+.sidebar-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-textarea {
+  flex-grow: 1;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  resize: none;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.sidebar-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.analyze-btn {
+  margin-top: 1rem;
+  width: 100%;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-radius: 0.25rem;
   border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.analyze-btn:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.analyze-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.map-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: #f8fafc;
+}
+
+.reactflow-wrapper {
+  flex-grow: 1;
+  position: relative;
+}
+
+.dashboard {
+  height: 18rem;
+  border-top: 1px solid #d1d5db;
+  background-color: #ffffff;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+.dashboard-content {
+  flex-grow: 1;
+  display: flex;
+}
+
+.info-section {
+  width: 33.333333%;
+  padding: 1.5rem;
+  border-right: 1px solid #e5e7eb;
+}
+
+.info-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #1f2937;
+  margin: 0;
+}
+
+.info-desc {
+  color: #6b7280;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+.functions-section {
+  width: 25%;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.functions-list {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+.function-item {
+  font-size: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+}
+
+.function-empty {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.code-section {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa;
+}
+
+.code-block {
+  padding: 1rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  color: #374151;
+  overflow: auto;
+  line-height: 1.5;
+  margin: 0;
+  text-wrap: wrap;
+  word-break: word-break;
+}
+
+.status-bar {
+  height: 2.5rem;
+  border-top: 1px solid #f3f4f6;
+  background-color: #f9fafb;
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  gap: 1.5rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+.status-arrow {
+  color: #d1d5db;
+}
+
+.status-active {
+  color: #3b82f6;
 }

@@ -8,6 +8,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import dagre from 'dagre';
+import './App.css';
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -97,23 +98,23 @@ export default function App() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col bg-white">
-      <header className="h-14 border-b border-gray-200 flex items-center px-6 shrink-0 justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-gray-400 text-xl tracking-[0.3em] font-bold">:::</span>
-          <h1 className="text-sm font-semibold text-gray-700">Código #1</h1>
+    <div className="app-container">
+      <header className="header">
+        <div className="header-logo-area">
+          <span className="logo-dots">:::</span>
+          <h1 className="logo-text">Código #1</h1>
         </div>
-        {loading && <span className="text-sm font-bold text-blue-500 animate-pulse">Analisando arquitetura com IA...</span>}
+        {loading && <span className="loading-text">Analisando arquitetura com IA...</span>}
       </header>
 
-      <div className="flex-grow flex overflow-hidden">
+      <div className="main-wrapper">
         
-        <aside className="w-80 border-r border-gray-200 bg-gray-50 flex flex-col p-4 shrink-0 shadow-sm z-10">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+        <aside className="sidebar">
+          <label className="sidebar-label">
             Cole seu código aqui
           </label>
           <textarea 
-            className="flex-grow w-full border border-gray-300 rounded p-3 text-sm font-mono resize-none focus:outline-none focus:border-blue-500 shadow-inner"
+            className="sidebar-textarea"
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
             placeholder="function start() { }"
@@ -121,14 +122,14 @@ export default function App() {
           <button 
             onClick={analisarCodigo}
             disabled={loading || !inputCode.trim()}
-            className="mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 disabled:bg-gray-400 transition-colors shadow"
+            className="analyze-btn"
           >
             {loading ? 'Processando...' : 'Analisar Arquitetura'}
           </button>
         </aside>
 
-        <main className="flex-grow flex flex-col relative bg-slate-50">
-          <div className="flex-grow relative">
+        <main className="map-area">
+          <div className="reactflow-wrapper">
             <ReactFlow 
               nodes={nodes}
               edges={edges}
@@ -142,49 +143,49 @@ export default function App() {
             </ReactFlow>
           </div>
 
-          <footer className="h-72 border-t border-gray-300 bg-white shrink-0 flex flex-col shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
-            <div className="flex-grow flex">
-              <section className="w-1/3 p-6 border-r border-gray-200">
-                <h2 className="font-bold text-xl text-gray-800">
+          <footer className="dashboard">
+            <div className="dashboard-content">
+              <section className="info-section">
+                <h2 className="info-title">
                   {selectedNode ? selectedNode.data.label : 'Selecione um bloco'}
                 </h2>
-                <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+                <p className="info-desc">
                   {selectedNode ? selectedNode.data.description : 'Aguardando seleção...'}
                 </p>
               </section>
               
-              <section className="w-1/4 border-r border-gray-200 flex flex-col">
-                <div className="p-3 border-b border-gray-100 text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <section className="functions-section">
+                <div className="section-title">
                   Functions
                 </div>
-                <div className="p-4 space-y-2 overflow-y-auto">
+                <div className="functions-list">
                   {selectedNode && selectedNode.data.functions ? (
                     selectedNode.data.functions.map((fn, index) => (
-                      <div key={index} className="text-sm font-mono p-2 bg-gray-50 rounded border border-gray-200">
+                      <div key={index} className="function-item">
                         {fn}
                       </div>
                     ))
                   ) : (
-                        <div className="text-sm text-gray-400 italic">Nenhuma função detectada</div>
+                        <div className="function-empty">Nenhuma função detectada</div>
                   )}
                 </div>
               </section>
               
-              <section className="flex-grow flex flex-col bg-[#fafafa]">
-                <div className="p-3 border-b border-gray-100 text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <section className="code-section">
+                <div className="section-title">
                   Code
                 </div>
-                <pre className="p-4 font-mono text-xs text-gray-700 overflow-auto leading-normal">
+                <pre className="code-block">
                   {selectedNode ? selectedNode.data.code : ''}
                 </pre>
               </section>
             </div>
 
-            <div className="h-10 border-t border-gray-100 bg-gray-50 flex items-center px-4 gap-6">
-               <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase">
+            <div className="status-bar">
+               <div className="status-item">
                  <span>Status</span>
-                 <span className="text-gray-300">→</span>
-                 <span className="text-blue-500">{selectedNode ? 'Bloco Ativo' : 'Aguardando'}</span>
+                 <span className="status-arrow">→</span>
+                 <span className="status-active">{selectedNode ? 'Bloco Ativo' : 'Aguardando'}</span>
                </div>
             </div>
           </footer>

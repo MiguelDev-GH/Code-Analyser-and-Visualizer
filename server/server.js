@@ -16,7 +16,7 @@ app.post('/api/analyze', async (req, res) => {
     const { code } = req.body;
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.1-flash-lite",
+      model: "gemini-3.1-flash-lite-preview",
       generationConfig: {
         responseMimeType: "application/json",
       }
