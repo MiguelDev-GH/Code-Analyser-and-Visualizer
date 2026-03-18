@@ -2,6 +2,7 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+./server/.env
 .env
 .env.*
 npm-debug.log*
