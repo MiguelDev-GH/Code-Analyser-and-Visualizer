@@ -13,9 +13,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.post('/api/analyze', async (req, res) => {
   try {
-    const { code } = req.body;
+    const code = req.body.code;
+    const language = req.body.language || 'english';
 
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: "gemini-3.1-flash-lite-preview",
       generationConfig: {
         responseMimeType: "application/json",
@@ -24,6 +25,7 @@ app.post('/api/analyze', async (req, res) => {
 
     const prompt = `
       Analyze the code below and generate a mental map of the architecture.
+      The labels and descriptions must be in ${language}.
       Return ONLY a valid JSON following this exact structure for React Flow:
       {
         "nodes": [
@@ -60,7 +62,7 @@ app.post('/api/analyze', async (req, res) => {
     const result = await model.generateContent(prompt);
     console.log('Response: ', result.response.text());
     const responseText = result.response.text();
-    
+
     let parsed;
     try {
       parsed = JSON.parse(responseText);
@@ -69,7 +71,7 @@ app.post('/api/analyze', async (req, res) => {
       console.error('Raw response:', responseText);
       throw new Error('AI response is not a valid JSON');
     }
-    
+
     res.json(parsed);
 
   } catch (error) {
