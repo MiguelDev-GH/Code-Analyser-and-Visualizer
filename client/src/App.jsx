@@ -8,6 +8,8 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import dagre from 'dagre';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './App.css';
 
 const dagreGraph = new dagre.graphlib.Graph();
@@ -29,7 +31,7 @@ const getLayoutedElements = (nodes, edges, direction = 'LR') => {
 
   const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    
+
     if (direction === 'LR') {
       node.targetPosition = Position.Left;
       node.sourcePosition = Position.Right;
@@ -72,6 +74,8 @@ export default function App() {
   const [edgeType, setEdgeType] = useState('default');
   const [edgeWidth, setEdgeWidth] = useState(2);
   const [layoutDirection, setLayoutDirection] = useState('LR');
+  const [detectedLanguage, setDetectedLanguage] = useState('');
+  const [lineCount, setLineCount] = useState(0);
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -156,17 +160,17 @@ export default function App() {
       if (isExceptionFilterActive) {
         isOpacityReduced = e.style?.stroke === '#ef4444' || !validNodeIds.has(e.source) || !validNodeIds.has(e.target);
       }
-      
+
       const targetOpacity = isOpacityReduced ? 0.15 : 1;
 
-      return { 
-        ...e, 
+      return {
+        ...e,
         type: edgeType,
-        style: { 
-          ...e.style, 
+        style: {
+          ...e.style,
           strokeWidth: edgeWidth,
-          opacity: targetOpacity, 
-          transition: 'opacity 0.3s' 
+          opacity: targetOpacity,
+          transition: 'opacity 0.3s'
         },
         labelStyle: {
           ...e.labelStyle,
@@ -233,6 +237,10 @@ export default function App() {
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
 
+      setDetectedLanguage(data.detectedLanguage || 'Unknown');
+      const lines = inputCode.split('\n').filter(line => line.trim() !== '').length;
+      setLineCount(lines || inputCode.split('\n').length);
+
       if (layoutedNodes && layoutedNodes.length > 0) {
         setSelectedNode(layoutedNodes[0]);
       }
@@ -255,12 +263,22 @@ export default function App() {
             <option value="portuguese">Portuguese</option>
             <option value="spanish">Spanish</option>
           </select>
+          {detectedLanguage && (
+            <div className="language-badge">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+              <span>{detectedLanguage}</span>
+              <span className="language-lines">• {lineCount} linhas</span>
+            </div>
+          )}
         </div>
         <div className="header-actions">
           {loading && <span className="loading-text">Analyzing architecture with AI...</span>}
 
-          <button 
-            className="filter-header-btn" 
+          <button
+            className="filter-header-btn"
             onClick={handleAutoFormat}
             title="Reorganize/Auto-format Nodes"
           >
@@ -271,9 +289,9 @@ export default function App() {
           </button>
 
           <div className="direction-select-wrapper">
-            <select 
-              className="direction-select" 
-              value={layoutDirection} 
+            <select
+              className="direction-select"
+              value={layoutDirection}
               onChange={(e) => changeLayoutDirection(e.target.value)}
               title="Layout Direction"
             >
@@ -284,8 +302,8 @@ export default function App() {
             </select>
           </div>
 
-          <button 
-            className={`filter-header-btn ${isExceptionFilterActive ? 'active' : ''}`} 
+          <button
+            className={`filter-header-btn ${isExceptionFilterActive ? 'active' : ''}`}
             onClick={() => setIsExceptionFilterActive(!isExceptionFilterActive)}
             title="Main path (Hide exceptions)"
           >
@@ -310,7 +328,7 @@ export default function App() {
           <label className="sidebar-label">
             Paste your code here
           </label>
-          <textarea
+          <textarea spellcheck="false" autocorrect="off" autocapitalize="off"
             className="sidebar-textarea"
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
@@ -429,9 +447,26 @@ export default function App() {
                 <div className="section-title">
                   Code
                 </div>
-                <pre className="code-block">
-                  {selectedNode ? selectedNode.data.code : ''}
-                </pre>
+                {selectedNode && selectedNode.data.code ? (
+                  <SyntaxHighlighter
+                    language={detectedLanguage ? detectedLanguage.toLowerCase() : 'javascript'}
+                    style={theme === 'dark' ? vscDarkPlus : prism}
+                    customStyle={{
+                      margin: 0,
+                      padding: '1rem',
+                      backgroundColor: 'transparent',
+                      fontSize: '0.75rem',
+                      fontFamily: 'inherit'
+                    }}
+                    className="code-block"
+                    wrapLines={true}
+                    wrapLongLines={true}
+                  >
+                    {selectedNode.data.code}
+                  </SyntaxHighlighter>
+                ) : (
+                  <pre className="code-block"></pre>
+                )}
               </section>
             </div>
 
@@ -488,9 +523,9 @@ export default function App() {
 
               <div className="setting-item">
                 <span className="setting-label">Line Style</span>
-                <select 
-                  className="settings-select" 
-                  value={edgeType} 
+                <select
+                  className="settings-select"
+                  value={edgeType}
                   onChange={e => setEdgeType(e.target.value)}
                 >
                   <option value="default">Bezier (Curved)</option>
@@ -502,8 +537,8 @@ export default function App() {
 
               <div className="setting-item">
                 <span className="setting-label">Line Thickness: {edgeWidth}px</span>
-                <input 
-                  type="range" 
+                <input
+                  type="range"
                   min="1" max="10" step="1"
                   value={edgeWidth}
                   onChange={e => setEdgeWidth(Number(e.target.value))}

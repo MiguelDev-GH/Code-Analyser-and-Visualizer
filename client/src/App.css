@@ -88,6 +88,20 @@
   margin: 0;
 }
 
+.language-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 1rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.language-lines {
+  opacity: 0.7;
+}
+
 .header-actions {
   display: flex;
   align-items: center;

@@ -28,6 +28,7 @@ app.post('/api/analyze', async (req, res) => {
       The labels and descriptions must be in ${language}.
       Return ONLY a valid JSON following this exact structure for React Flow:
       {
+        "detectedLanguage": "Programming language name (e.g. JavaScript, Python, C++, etc)",
         "nodes": [
           {
             "id": "unique_string",
