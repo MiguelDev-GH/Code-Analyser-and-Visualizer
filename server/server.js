@@ -34,7 +34,7 @@ app.post('/api/analyze', async (req, res) => {
             "data": { 
               "label": "Main Action Name (e.g., Fetch Data, Validate Input)",
               "description": "Summary up to MAX 30 words, most legible and concise possible",
-              "code": "Exact full code snippet",
+              "code": "Exact detailed full code of the node",
               "functions": ["func1", "func2"]
             }
           }

@@ -14,7 +14,6 @@ const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 const getLayoutedElements = (nodes, edges, direction = 'LR') => {
-  const isHorizontal = direction === 'LR';
   dagreGraph.setGraph({ rankdir: direction });
 
   nodes.forEach((node) => {
@@ -30,8 +29,20 @@ const getLayoutedElements = (nodes, edges, direction = 'LR') => {
 
   const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    node.targetPosition = isHorizontal ? Position.Left : Position.Top;
-    node.sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
+    
+    if (direction === 'LR') {
+      node.targetPosition = Position.Left;
+      node.sourcePosition = Position.Right;
+    } else if (direction === 'RL') {
+      node.targetPosition = Position.Right;
+      node.sourcePosition = Position.Left;
+    } else if (direction === 'TB') {
+      node.targetPosition = Position.Top;
+      node.sourcePosition = Position.Bottom;
+    } else if (direction === 'BT') {
+      node.targetPosition = Position.Bottom;
+      node.sourcePosition = Position.Top;
+    }
 
     node.position = {
       x: nodeWithPosition.x - 100, // Ajuste baseado na metade da largura (200/2)
@@ -57,6 +68,10 @@ export default function App() {
   const [language, setLanguage] = useState('english');
   const [theme, setTheme] = useState('light');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isExceptionFilterActive, setIsExceptionFilterActive] = useState(false);
+  const [edgeType, setEdgeType] = useState('default');
+  const [edgeWidth, setEdgeWidth] = useState(2);
+  const [layoutDirection, setLayoutDirection] = useState('LR');
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -103,6 +118,99 @@ export default function App() {
     return { previousNodes, nextDirectNodes, nextExceptionNodes };
   }, [selectedNode, edges, nodes]);
 
+  const { filteredNodes, filteredEdges } = useMemo(() => {
+    let validNodeIds = new Set();
+
+    if (isExceptionFilterActive) {
+      const inDegree = new Map(nodes.map(n => [n.id, 0]));
+      edges.forEach(e => {
+        inDegree.set(e.target, (inDegree.get(e.target) || 0) + 1);
+      });
+
+      const roots = nodes.filter(n => inDegree.get(n.id) === 0);
+      const queue = [...roots.map(r => r.id)];
+
+      if (queue.length === 0 && nodes.length > 0) {
+        queue.push(nodes[0].id);
+      }
+
+      while (queue.length > 0) {
+        const currentId = queue.shift();
+        if (!validNodeIds.has(currentId)) {
+          validNodeIds.add(currentId);
+          const outgoingValidEdges = edges.filter(e => e.source === currentId && e.style?.stroke !== '#ef4444');
+          outgoingValidEdges.forEach(e => queue.push(e.target));
+        }
+      }
+    }
+
+    const newNodes = nodes.map(n => {
+      if (isExceptionFilterActive && !validNodeIds.has(n.id)) {
+        return { ...n, style: { ...n.style, opacity: 0.25, transition: 'opacity 0.3s' } };
+      }
+      return { ...n, style: { ...n.style, opacity: 1, transition: 'opacity 0.3s' } };
+    });
+
+    const newEdges = edges.map(e => {
+      let isOpacityReduced = false;
+      if (isExceptionFilterActive) {
+        isOpacityReduced = e.style?.stroke === '#ef4444' || !validNodeIds.has(e.source) || !validNodeIds.has(e.target);
+      }
+      
+      const targetOpacity = isOpacityReduced ? 0.15 : 1;
+
+      return { 
+        ...e, 
+        type: edgeType,
+        style: { 
+          ...e.style, 
+          strokeWidth: edgeWidth,
+          opacity: targetOpacity, 
+          transition: 'opacity 0.3s' 
+        },
+        labelStyle: {
+          ...e.labelStyle,
+          opacity: targetOpacity,
+          transition: 'opacity 0.3s'
+        },
+        labelBgStyle: {
+          ...e.labelBgStyle,
+          opacity: targetOpacity,
+          transition: 'opacity 0.3s'
+        }
+      };
+    });
+
+    return { filteredNodes: newNodes, filteredEdges: newEdges };
+  }, [nodes, edges, isExceptionFilterActive, edgeType, edgeWidth]);
+
+  const changeLayoutDirection = (dir) => {
+    setLayoutDirection(dir);
+    if (nodes.length > 0) {
+      const cleanNodes = nodes.map(n => ({ ...n }));
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+        cleanNodes,
+        edges,
+        dir
+      );
+      setNodes(layoutedNodes);
+      setEdges([...layoutedEdges]);
+    }
+  };
+
+  const handleAutoFormat = () => {
+    if (nodes.length > 0) {
+      const cleanNodes = nodes.map(n => ({ ...n }));
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+        cleanNodes,
+        edges,
+        layoutDirection
+      );
+      setNodes(layoutedNodes);
+      setEdges([...layoutedEdges]);
+    }
+  };
+
   const analisarCodigo = async () => {
     if (!inputCode.trim()) return;
     setLoading(true);
@@ -118,7 +226,8 @@ export default function App() {
 
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         data.nodes || [],
-        data.edges || []
+        data.edges || [],
+        layoutDirection
       );
 
       setNodes(layoutedNodes);
@@ -149,6 +258,42 @@ export default function App() {
         </div>
         <div className="header-actions">
           {loading && <span className="loading-text">Analyzing architecture with AI...</span>}
+
+          <button 
+            className="filter-header-btn" 
+            onClick={handleAutoFormat}
+            title="Reorganize/Auto-format Nodes"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+            </svg>
+            <span>Organize</span>
+          </button>
+
+          <div className="direction-select-wrapper">
+            <select 
+              className="direction-select" 
+              value={layoutDirection} 
+              onChange={(e) => changeLayoutDirection(e.target.value)}
+              title="Layout Direction"
+            >
+              <option value="LR">Horizontal (L → R)</option>
+              <option value="RL">Horizontal (R → L)</option>
+              <option value="TB">Vertical (T → B)</option>
+              <option value="BT">Vertical (B → T)</option>
+            </select>
+          </div>
+
+          <button 
+            className={`filter-header-btn ${isExceptionFilterActive ? 'active' : ''}`} 
+            onClick={() => setIsExceptionFilterActive(!isExceptionFilterActive)}
+            title="Main path (Hide exceptions)"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <span>Main path</span>
+          </button>
           <button className="settings-btn" onClick={() => setIsSettingsOpen(true)} title="Configurations">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"></circle>
@@ -183,8 +328,8 @@ export default function App() {
         <main className="map-area">
           <div className="reactflow-wrapper">
             <ReactFlow
-              nodes={nodes}
-              edges={edges}
+              nodes={filteredNodes}
+              edges={filteredEdges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onNodeClick={onNodeClick}
@@ -305,12 +450,12 @@ export default function App() {
         <div className="settings-overlay" onClick={() => setIsSettingsOpen(false)}>
           <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
             <div className="settings-header">
-              <h2 className="info-title">Configurações</h2>
+              <h2 className="info-title">Settings</h2>
               <button className="close-settings" onClick={() => setIsSettingsOpen(false)}>&times;</button>
             </div>
             <div className="settings-content">
               <div className="setting-item">
-                <span className="setting-label">Tema</span>
+                <span className="setting-label">Theme</span>
                 <div className="theme-toggle-group">
                   <div
                     className={`theme-option ${theme === 'light' ? 'active' : ''}`}
@@ -339,6 +484,31 @@ export default function App() {
                     <span>Dark</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="setting-item">
+                <span className="setting-label">Line Style</span>
+                <select 
+                  className="settings-select" 
+                  value={edgeType} 
+                  onChange={e => setEdgeType(e.target.value)}
+                >
+                  <option value="default">Bezier (Curved)</option>
+                  <option value="straight">Straight</option>
+                  <option value="step">Step</option>
+                  <option value="smoothstep">Smooth Step</option>
+                </select>
+              </div>
+
+              <div className="setting-item">
+                <span className="setting-label">Line Thickness: {edgeWidth}px</span>
+                <input 
+                  type="range" 
+                  min="1" max="10" step="1"
+                  value={edgeWidth}
+                  onChange={e => setEdgeWidth(Number(e.target.value))}
+                  className="settings-slider"
+                />
               </div>
             </div>
           </div>
