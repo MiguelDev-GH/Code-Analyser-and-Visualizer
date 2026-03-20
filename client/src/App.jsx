@@ -456,7 +456,10 @@ export default function App() {
                       padding: '1rem',
                       backgroundColor: 'transparent',
                       fontSize: '0.75rem',
-                      fontFamily: 'inherit'
+                      fontFamily: 'inherit',
+                      flex: 1,
+                      overflowY: 'auto',
+                      minHeight: 0
                     }}
                     className="code-block"
                     wrapLines={true}
