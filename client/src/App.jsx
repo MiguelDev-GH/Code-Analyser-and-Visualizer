@@ -10,7 +10,14 @@ import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import EditorModule from 'react-simple-code-editor';
+const Editor = EditorModule.default || EditorModule;
+import PrismCore from 'prismjs';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/themes/prism-tomorrow.css';
 import './App.css';
+import InputScreen from './InputScreen';
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -78,6 +85,7 @@ export default function App() {
   const [lineCount, setLineCount] = useState(0);
   const [showNodeDescriptions, setShowNodeDescriptions] = useState(false);
   const [codeTitle, setCodeTitle] = useState('Code #1');
+  const [isAnalyzed, setIsAnalyzed] = useState(false);
 
   useEffect(() => {
     if (nodes.length > 0) {
@@ -163,13 +171,18 @@ export default function App() {
         }
 
         if (startIdx !== -1) {
-          textareaRef.current.focus({ preventScroll: true }); // Prevent browser jumping uncontrollably
-          textareaRef.current.setSelectionRange(startIdx, endIdx);
+          const editorTextarea = document.getElementById('sidebar-code-area');
+          if (editorTextarea) {
+            editorTextarea.focus({ preventScroll: true });
+            editorTextarea.setSelectionRange(startIdx, endIdx);
+          }
 
-          // Smoothly scroll the textarea ourselves
+          // Smoothly scroll the textarea container ourselves
           const linesBefore = inputCode.substring(0, startIdx).split('\n').length;
           const lineHeight = 21;
-          textareaRef.current.scrollTop = Math.max(0, (linesBefore - 3) * lineHeight);
+          if (textareaRef.current) {
+            textareaRef.current.scrollTop = Math.max(0, (linesBefore - 3) * lineHeight);
+          }
         }
       } catch (e) {
         console.error("Error highlighting code:", e);
@@ -325,12 +338,27 @@ export default function App() {
       if (layoutedNodes && layoutedNodes.length > 0) {
         setSelectedNode(layoutedNodes[0]);
       }
+
+      setIsAnalyzed(true);
     } catch (error) {
       console.error('Error analyzing the code:', error);
       alert('Error analyzing the code. Verify that the backend is running. Detailed error in console.');
     } finally {
       setLoading(false);
     }
+  }
+
+  if (!isAnalyzed) {
+    return (
+      <div className="app-container dark-theme">
+        <InputScreen
+          inputCode={inputCode}
+          setInputCode={setInputCode}
+          onAnalyze={analisarCodigo}
+          loading={loading}
+        />
+      </div>
+    );
   }
 
   return (
@@ -407,15 +435,25 @@ export default function App() {
 
         <aside className="sidebar">
           <label className="sidebar-label">
-            Paste your code here
+            Code
           </label>
-          <textarea spellcheck="false" autocorrect="off" autocapitalize="off"
-            ref={textareaRef}
-            className="sidebar-textarea"
-            value={inputCode}
-            onChange={(e) => setInputCode(e.target.value)}
-            placeholder="function start() { }"
-          />
+          <div ref={textareaRef} className="sidebar-textarea" style={{ overflow: 'auto', padding: 0, position: 'relative' }}>
+            <Editor
+              value={inputCode}
+              onValueChange={code => setInputCode(code)}
+              highlight={code => PrismCore.highlight(code, PrismCore.languages.javascript, 'javascript')}
+              padding={16}
+              textareaId="sidebar-code-area"
+              style={{
+                fontFamily: '"Inter", ui-monospace, SFMono-Regular, monospace',
+                fontSize: '0.875rem',
+                minHeight: '100%',
+                backgroundColor: 'transparent'
+              }}
+              textareaClassName="sidebar-code-textarea"
+              placeholder="function start() { }"
+            />
+          </div>
           <button
             onClick={analisarCodigo}
             disabled={loading || !inputCode.trim()}

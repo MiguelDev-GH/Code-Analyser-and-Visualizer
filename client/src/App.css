@@ -179,10 +179,13 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.sidebar-textarea:focus {
+.sidebar-textarea:focus-within {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px rgba(255, 109, 90, 0.1);
+}
+.sidebar-code-textarea {
+  outline: none !important;
 }
 
 .analyze-btn {
