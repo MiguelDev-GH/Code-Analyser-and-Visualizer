@@ -77,6 +77,7 @@ export default function App() {
   const [detectedLanguage, setDetectedLanguage] = useState('');
   const [lineCount, setLineCount] = useState(0);
   const [showNodeDescriptions, setShowNodeDescriptions] = useState(false);
+  const [codeTitle, setCodeTitle] = useState('Code #1');
 
   useEffect(() => {
     if (nodes.length > 0) {
@@ -316,6 +317,7 @@ export default function App() {
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
 
+      setCodeTitle(data.title || 'Code #1');
       setDetectedLanguage(data.detectedLanguage || 'Unknown');
       const lines = inputCode.split('\n').filter(line => line.trim() !== '').length;
       setLineCount(lines || inputCode.split('\n').length);
@@ -336,7 +338,7 @@ export default function App() {
       <header className="header">
         <div className="header-logo-area">
           <span className="logo-dots">:::</span>
-          <h1 className="logo-text">Code #1</h1>
+          <h1 className="logo-text">{codeTitle}</h1>
           <select value={language} onChange={(e) => setLanguage(e.target.value)}>
             <option value="english">English</option>
             <option value="portuguese">Portuguese</option>

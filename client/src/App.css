@@ -635,7 +635,6 @@
   border-color: var(--accent-color);
 }
 
-/* React Flow Theme Overrides */
 .react-flow__node-default,
 .react-flow__node-input,
 .react-flow__node-output {

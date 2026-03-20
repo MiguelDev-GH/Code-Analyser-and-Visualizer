@@ -31,10 +31,12 @@ app.post('/api/analyze', async (req, res) => {
       You MUST extract the EXACT, FULL, UNMODIFIED code block from the original code that corresponds to this node. Do NOT summarize, truncate, paraphrase, or omit any lines. Provide the complete code verbatim.
 
       CRITICAL INSTRUCTION FOR THE GENERAL ARCHITECTURE:
-      You MUST analyze the code and generate a high-level conceptual mental map.
-      The resulting terminology, node labels, and descriptions MUST be EXTREMELY CONCISE, EASY TO UNDERSTAND, and completely clear to non-technical individuals (like clients, managers, or designers).
-      Avoid overly technical jargon (e.g., do not use purely developer terms like "for-loop", "instantiation", or "memory allocation"). Focus entirely on the BUSINESS LOGIC, explaining WHAT the code achieves in the real world rather than HOW it does it programmatically.
-      Ensure the nodes are connected in a conceptual flow that represents the real-world actions of the code.
+      1. You MUST analyze the FULL code. Do NOT skip or omit major sections.
+      2. Granularity: The number of nodes MUST be PROPORTIONAL to the size and complexity of the code. For large/complex files, you MUST generate dozens of nodes. Break down the logic completely so that every significant business rule, conditional path (if/else), error handling, and major execution step has its own specific node.
+      3. The resulting terminology, node labels, and descriptions MUST be EXTREMELY CONCISE, EASY TO UNDERSTAND, and completely clear to non-technical individuals (like clients, managers, or designers).
+      4. Avoid overly technical jargon (e.g., do not use purely developer terms like "for-loop", "instantiation", or "memory allocation"). Focus entirely on the BUSINESS LOGIC, explaining WHAT the code achieves in the real world rather than HOW it does it programmatically.
+      5. Ensure the nodes are connected in a conceptual flow that represents the real-world actions of the code.
+      6. Even if a part of the code does not have a clear business logic or is not a function, you MUST generate a node for it.
       
 
       Return ONLY a valid JSON following this exact structure for React Flow:
