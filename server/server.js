@@ -26,6 +26,10 @@ app.post('/api/analyze', async (req, res) => {
     const prompt = `
       Analyze the code below and generate a mental map of the architecture.
       The labels and descriptions must be in ${language}.
+      
+      CRITICAL INSTRUCTION FOR "code" FIELD:
+      You MUST extract the EXACT, FULL, UNMODIFIED code block from the original code that corresponds to this node. Do NOT summarize, truncate, paraphrase, or omit any lines. Provide the complete code verbatim.
+
       Return ONLY a valid JSON following this exact structure for React Flow:
       {
         "detectedLanguage": "Programming language name (e.g. JavaScript, Python, C++, etc)",
@@ -35,7 +39,7 @@ app.post('/api/analyze', async (req, res) => {
             "data": { 
               "label": "Main Action Name (e.g., Fetch Data, Validate Input)",
               "description": "Summary up to MAX 30 words, most legible and concise possible",
-              "code": "Exact detailed full code of the node",
+              "code": "The EXACT, FULL, UNMODIFIED code block from the original input for this node. DO NOT SUMMARIZE OR TRUNCATE.",
               "functions": ["func1", "func2"]
             }
           }
