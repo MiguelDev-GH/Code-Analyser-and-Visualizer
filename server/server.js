@@ -30,6 +30,13 @@ app.post('/api/analyze', async (req, res) => {
       CRITICAL INSTRUCTION FOR "code" FIELD:
       You MUST extract the EXACT, FULL, UNMODIFIED code block from the original code that corresponds to this node. Do NOT summarize, truncate, paraphrase, or omit any lines. Provide the complete code verbatim.
 
+      CRITICAL INSTRUCTION FOR THE GENERAL ARCHITECTURE:
+      You MUST analyze the code and generate a high-level conceptual mental map.
+      The resulting terminology, node labels, and descriptions MUST be EXTREMELY CONCISE, EASY TO UNDERSTAND, and completely clear to non-technical individuals (like clients, managers, or designers).
+      Avoid overly technical jargon (e.g., do not use purely developer terms like "for-loop", "instantiation", or "memory allocation"). Focus entirely on the BUSINESS LOGIC, explaining WHAT the code achieves in the real world rather than HOW it does it programmatically.
+      Ensure the nodes are connected in a conceptual flow that represents the real-world actions of the code.
+      
+
       Return ONLY a valid JSON following this exact structure for React Flow:
       {
         "detectedLanguage": "Programming language name (e.g. JavaScript, Python, C++, etc)",

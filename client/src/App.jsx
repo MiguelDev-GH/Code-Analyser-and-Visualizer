@@ -15,12 +15,11 @@ import './App.css';
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-const getLayoutedElements = (nodes, edges, direction = 'LR') => {
+const getLayoutedElements = (nodes, edges, direction = 'LR', isDescVisible = false) => {
   dagreGraph.setGraph({ rankdir: direction });
 
   nodes.forEach((node) => {
-    // Usamos larguras fixas baseadas no seu design original
-    dagreGraph.setNode(node.id, { width: 200, height: 80 });
+    dagreGraph.setNode(node.id, { width: isDescVisible ? 240 : 200, height: isDescVisible ? 120 : 80 });
   });
 
   edges.forEach((edge) => {
@@ -77,6 +76,21 @@ export default function App() {
   const [layoutDirection, setLayoutDirection] = useState('LR');
   const [detectedLanguage, setDetectedLanguage] = useState('');
   const [lineCount, setLineCount] = useState(0);
+  const [showNodeDescriptions, setShowNodeDescriptions] = useState(false);
+
+  useEffect(() => {
+    if (nodes.length > 0) {
+      const cleanNodes = nodes.map(n => ({ ...n }));
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+        cleanNodes,
+        edges,
+        layoutDirection,
+        showNodeDescriptions
+      );
+      setNodes(layoutedNodes);
+      setEdges([...layoutedEdges]);
+    }
+  }, [showNodeDescriptions]);
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -129,7 +143,7 @@ export default function App() {
       const snippet = selectedNode.data.code;
       const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const wsRegexString = escapeRegExp(snippet.trim()).replace(/\s+/g, '\\s+');
-      
+
       try {
         const regex = new RegExp(wsRegexString);
         const match = inputCode.match(regex);
@@ -150,10 +164,10 @@ export default function App() {
         if (startIdx !== -1) {
           textareaRef.current.focus({ preventScroll: true }); // Prevent browser jumping uncontrollably
           textareaRef.current.setSelectionRange(startIdx, endIdx);
-          
+
           // Smoothly scroll the textarea ourselves
           const linesBefore = inputCode.substring(0, startIdx).split('\n').length;
-          const lineHeight = 21; 
+          const lineHeight = 21;
           textareaRef.current.scrollTop = Math.max(0, (linesBefore - 3) * lineHeight);
         }
       } catch (e) {
@@ -189,10 +203,32 @@ export default function App() {
     }
 
     const newNodes = nodes.map(n => {
+      let targetOpacity = 1;
       if (isExceptionFilterActive && !validNodeIds.has(n.id)) {
-        return { ...n, style: { ...n.style, opacity: 0.25, transition: 'opacity 0.3s' } };
+        targetOpacity = 0.25;
       }
-      return { ...n, style: { ...n.style, opacity: 1, transition: 'opacity 0.3s' } };
+
+      const textLabel = n.data.rawLabel || n.data.label;
+      const labelContent = (
+        <div style={{ padding: '0px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ fontWeight: 'bold' }}>{textLabel}</div>
+          {showNodeDescriptions && n.data.description && (
+            <div style={{ fontSize: '0.65em', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.25', fontWeight: '500' }}>
+              {n.data.description}
+            </div>
+          )}
+        </div>
+      );
+
+      return {
+        ...n,
+        data: {
+          ...n.data,
+          rawLabel: textLabel,
+          label: labelContent
+        },
+        style: { ...n.style, opacity: targetOpacity, transition: 'opacity 0.3s' }
+      };
     });
 
     const newEdges = edges.map(e => {
@@ -226,7 +262,7 @@ export default function App() {
     });
 
     return { filteredNodes: newNodes, filteredEdges: newEdges };
-  }, [nodes, edges, isExceptionFilterActive, edgeType, edgeWidth]);
+  }, [nodes, edges, isExceptionFilterActive, edgeType, edgeWidth, showNodeDescriptions]);
 
   const changeLayoutDirection = (dir) => {
     setLayoutDirection(dir);
@@ -235,7 +271,8 @@ export default function App() {
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         cleanNodes,
         edges,
-        dir
+        dir,
+        showNodeDescriptions
       );
       setNodes(layoutedNodes);
       setEdges([...layoutedEdges]);
@@ -248,7 +285,8 @@ export default function App() {
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         cleanNodes,
         edges,
-        layoutDirection
+        layoutDirection,
+        showNodeDescriptions
       );
       setNodes(layoutedNodes);
       setEdges([...layoutedEdges]);
@@ -271,7 +309,8 @@ export default function App() {
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         data.nodes || [],
         data.edges || [],
-        layoutDirection
+        layoutDirection,
+        showNodeDescriptions
       );
 
       setNodes(layoutedNodes);
@@ -404,7 +443,7 @@ export default function App() {
               <section className="info-section">
                 <div className="description-container">
                   <h2 className="info-title">
-                    {selectedNode ? selectedNode.data.label : 'Select a node'}
+                    {selectedNode ? (selectedNode.data.rawLabel || selectedNode.data.label) : 'Select a node'}
                   </h2>
                   <p className="info-desc">
                     {selectedNode ? selectedNode.data.description : 'Waiting for selection...'}
@@ -418,7 +457,7 @@ export default function App() {
                       <div className="status-category-block category-previous">
                         {previousNodes.map(node => (
                           <div key={node.id} className="status-item">
-                            <span className="status-text">{node.data.label}</span>
+                            <span className="status-text">{node.data.rawLabel || node.data.label}</span>
                             <div className="status-icon status-icon-incoming">
                               {/* Ícone: Setinha da esquerda entrando em uma caixinha */}
                               <svg viewBox="0 0 16 16" width="16" height="16">
@@ -435,7 +474,7 @@ export default function App() {
                       <div className="status-category-block category-exception">
                         {nextExceptionNodes.map(node => (
                           <div key={node.id} className="status-item">
-                            <span className="status-text">{node.data.label}</span>
+                            <span className="status-text">{node.data.rawLabel || node.data.label}</span>
                             <div className="status-icon status-icon-up">
                               {/* Ícone: Setinha para cima saindo de uma caixinha */}
                               <svg viewBox="0 0 16 16" width="16" height="16">
@@ -452,7 +491,7 @@ export default function App() {
                       <div className="status-category-block category-next">
                         {nextDirectNodes.map(node => (
                           <div key={node.id} className="status-item">
-                            <span className="status-text">{node.data.label}</span>
+                            <span className="status-text">{node.data.rawLabel || node.data.label}</span>
                             <div className="status-icon status-icon-direct">
                               {/* Ícone: Setinha para direita saindo de uma caixinha */}
                               <svg viewBox="0 0 16 16" width="16" height="16">
@@ -563,6 +602,19 @@ export default function App() {
                     <span>Dark</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="setting-item">
+                <span className="setting-label">Node Details</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={showNodeDescriptions}
+                    onChange={e => setShowNodeDescriptions(e.target.checked)}
+                    style={{ width: '16px', height: '16px', accentColor: 'var(--accent-color)' }}
+                  />
+                  Show descriptions inside nodes
+                </label>
               </div>
 
               <div className="setting-item">

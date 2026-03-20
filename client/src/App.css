@@ -643,6 +643,7 @@
   color: var(--text-primary) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: calc(var(--radius) / 2) !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
 }
 
 .react-flow__node-default.selected,
@@ -676,4 +677,13 @@
   border: 1px solid var(--border-color) !important;
   border-radius: calc(var(--radius) / 2) !important;
   overflow: hidden;
+}
+
+/* React Flow Edge Labels Overrides */
+.react-flow__edge-textbg {
+  fill: var(--bg-secondary) !important;
+}
+
+.react-flow__edge-text {
+  fill: var(--text-primary) !important;
 }
