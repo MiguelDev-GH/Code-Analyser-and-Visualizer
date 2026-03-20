@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -62,6 +62,7 @@ const getLayoutedElements = (nodes, edges, direction = 'LR') => {
 const initialNodes = [];
 
 export default function App() {
+  const textareaRef = useRef(null);
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState([]);
   const [inputCode, setInputCode] = useState('');
@@ -121,6 +122,45 @@ export default function App() {
 
     return { previousNodes, nextDirectNodes, nextExceptionNodes };
   }, [selectedNode, edges, nodes]);
+
+  // Code tracking effect
+  useEffect(() => {
+    if (selectedNode && selectedNode.data.code && textareaRef.current && inputCode) {
+      const snippet = selectedNode.data.code;
+      const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const wsRegexString = escapeRegExp(snippet.trim()).replace(/\s+/g, '\\s+');
+      
+      try {
+        const regex = new RegExp(wsRegexString);
+        const match = inputCode.match(regex);
+        let startIdx = -1;
+        let endIdx = -1;
+
+        if (match) {
+          startIdx = match.index;
+          endIdx = match.index + match[0].length;
+        } else {
+          const exactIdx = inputCode.indexOf(snippet.trim());
+          if (exactIdx !== -1) {
+            startIdx = exactIdx;
+            endIdx = exactIdx + snippet.trim().length;
+          }
+        }
+
+        if (startIdx !== -1) {
+          textareaRef.current.focus({ preventScroll: true }); // Prevent browser jumping uncontrollably
+          textareaRef.current.setSelectionRange(startIdx, endIdx);
+          
+          // Smoothly scroll the textarea ourselves
+          const linesBefore = inputCode.substring(0, startIdx).split('\n').length;
+          const lineHeight = 21; 
+          textareaRef.current.scrollTop = Math.max(0, (linesBefore - 3) * lineHeight);
+        }
+      } catch (e) {
+        console.error("Error highlighting code:", e);
+      }
+    }
+  }, [selectedNode]);
 
   const { filteredNodes, filteredEdges } = useMemo(() => {
     let validNodeIds = new Set();
@@ -329,6 +369,7 @@ export default function App() {
             Paste your code here
           </label>
           <textarea spellcheck="false" autocorrect="off" autocapitalize="off"
+            ref={textareaRef}
             className="sidebar-textarea"
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
