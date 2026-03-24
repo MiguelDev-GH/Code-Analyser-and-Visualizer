@@ -15,30 +15,46 @@ import { useAnalyze } from './hooks/useAnalyze';
 import { useCodeHighlight } from './hooks/useCodeHighlight';
 import { useNodeConnections } from './hooks/useNodeConnections';
 import { useGraphFilter } from './hooks/useGraphFilter.jsx';
+import { useSettings } from './hooks/useSettings';
 
 export default function App() {
   const textareaRef = useRef(null);
   const [inputCode, setInputCode] = useState('');
   const [selectedNode, setSelectedNode] = useState(null);
-  const [language, setLanguage] = useState('english');
-  const [theme, setTheme] = useState('light');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isExceptionFilterActive, setIsExceptionFilterActive] = useState(false);
-  const [edgeType, setEdgeType] = useState('default');
-  const [edgeWidth, setEdgeWidth] = useState(2);
+
+  // Load all settings from cookies (once on mount)
+  const { initial, persist } = useSettings();
+
+  const [language, setLanguage] = useState(initial.language);
+  const [theme, setTheme] = useState(initial.theme);
+  const [isExceptionFilterActive, setIsExceptionFilterActive] = useState(initial.isExceptionFilterActive);
+  const [edgeType, setEdgeType] = useState(initial.edgeType);
+  const [edgeWidth, setEdgeWidth] = useState(initial.edgeWidth);
+
+  // Wrapped setters that also persist to cookies
+  const handleSetLanguage = (v) => { setLanguage(v); persist('language', v); };
+  const handleSetTheme = (v) => { setTheme(v); persist('theme', v); };
+  const handleSetIsExceptionFilterActive = (v) => { setIsExceptionFilterActive(v); persist('isExceptionFilterActive', v); };
+  const handleSetEdgeType = (v) => { setEdgeType(v); persist('edgeType', v); };
+  const handleSetEdgeWidth = (v) => { setEdgeWidth(v); persist('edgeWidth', v); };
 
   const {
     nodes, setNodes, edges, setEdges,
     layoutDirection, changeLayoutDirection,
     showNodeDescriptions, setShowNodeDescriptions,
     handleAutoFormat, onNodesChange, onEdgesChange,
-  } = useGraphState();
+  } = useGraphState(initial);
+
+  // Wrapped setters for graph state settings
+  const handleSetShowNodeDescriptions = (v) => { setShowNodeDescriptions(v); persist('showNodeDescriptions', v); };
+  const handleChangeLayoutDirection = (v) => { changeLayoutDirection(v); persist('layoutDirection', v); };
 
   const { loading, detectedLanguage, lineCount, codeTitle, isAnalyzed, analyze } = useAnalyze({
     inputCode, language, layoutDirection, showNodeDescriptions,
   });
 
-  const highlightLines = useCodeHighlight(selectedNode, inputCode, textareaRef);
+  const highlightLines = useCodeHighlight(selectedNode, inputCode);
   const { previousNodes, nextDirectNodes, nextExceptionNodes } = useNodeConnections(selectedNode, nodes, edges);
   const { filteredNodes, filteredEdges } = useGraphFilter(nodes, edges, {
     isExceptionFilterActive, edgeType, edgeWidth, showNodeDescriptions,
@@ -53,7 +69,11 @@ export default function App() {
   if (!isAnalyzed) {
     return (
       <div className="app-container dark-theme">
-        <InputScreen inputCode={inputCode} setInputCode={setInputCode} onAnalyze={handleAnalyze} loading={loading} />
+        <InputScreen
+          inputCode={inputCode} setInputCode={setInputCode}
+          onAnalyze={handleAnalyze} loading={loading}
+          language={language} setLanguage={handleSetLanguage}
+        />
       </div>
     );
   }
@@ -61,12 +81,12 @@ export default function App() {
   return (
     <div className={`app-container ${theme === 'dark' ? 'dark-theme' : ''}`}>
       <Header
-        codeTitle={codeTitle} language={language} setLanguage={setLanguage}
+        codeTitle={codeTitle}
         detectedLanguage={detectedLanguage} lineCount={lineCount} loading={loading}
         handleAutoFormat={handleAutoFormat} layoutDirection={layoutDirection}
-        changeLayoutDirection={changeLayoutDirection}
+        changeLayoutDirection={handleChangeLayoutDirection}
         isExceptionFilterActive={isExceptionFilterActive}
-        setIsExceptionFilterActive={setIsExceptionFilterActive}
+        setIsExceptionFilterActive={handleSetIsExceptionFilterActive}
         setIsSettingsOpen={setIsSettingsOpen}
       />
 
@@ -103,10 +123,10 @@ export default function App() {
 
       <SettingsPanel
         isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
-        theme={theme} setTheme={setTheme}
-        showNodeDescriptions={showNodeDescriptions} setShowNodeDescriptions={setShowNodeDescriptions}
-        edgeType={edgeType} setEdgeType={setEdgeType}
-        edgeWidth={edgeWidth} setEdgeWidth={setEdgeWidth}
+        theme={theme} setTheme={handleSetTheme}
+        showNodeDescriptions={showNodeDescriptions} setShowNodeDescriptions={handleSetShowNodeDescriptions}
+        edgeType={edgeType} setEdgeType={handleSetEdgeType}
+        edgeWidth={edgeWidth} setEdgeWidth={handleSetEdgeWidth}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 export default function Header({
-  codeTitle, language, setLanguage,
+  codeTitle,
   detectedLanguage, lineCount, loading,
   handleAutoFormat, layoutDirection, changeLayoutDirection,
   isExceptionFilterActive, setIsExceptionFilterActive,
@@ -10,11 +10,6 @@ export default function Header({
       <div className="header-logo-area">
         <span className="logo-dots">:::</span>
         <h1 className="logo-text">{codeTitle}</h1>
-        <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-          <option value="english">English</option>
-          <option value="portuguese">Portuguese</option>
-          <option value="spanish">Spanish</option>
-        </select>
         {detectedLanguage && (
           <div className="language-badge">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

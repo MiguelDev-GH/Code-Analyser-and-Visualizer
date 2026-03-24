@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const LINE_HEIGHT = 21;
-
-export function useCodeHighlight(selectedNode, inputCode, textareaRef) {
+export function useCodeHighlight(selectedNode, inputCode) {
   const [highlightLines, setHighlightLines] = useState(null);
 
   useEffect(() => {
@@ -18,7 +16,7 @@ export function useCodeHighlight(selectedNode, inputCode, textareaRef) {
       const regex = new RegExp(escapeRegExp(snippet).replace(/\s+/g, '\\s+'));
       const match = inputCode.match(regex);
 
-      let startIdx = match ? match.index : inputCode.indexOf(snippet);
+      const startIdx = match ? match.index : inputCode.indexOf(snippet);
       if (startIdx === -1) {
         setHighlightLines(null);
         return;
@@ -29,10 +27,6 @@ export function useCodeHighlight(selectedNode, inputCode, textareaRef) {
       const endLine = inputCode.substring(0, endIdx).split('\n').length;
 
       setHighlightLines({ startLine, endLine });
-
-      if (textareaRef.current) {
-        textareaRef.current.scrollTop = Math.max(0, (startLine - 3) * LINE_HEIGHT);
-      }
     } catch (e) {
       console.error('Error highlighting code:', e);
       setHighlightLines(null);

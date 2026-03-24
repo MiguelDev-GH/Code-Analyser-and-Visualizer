@@ -2,11 +2,11 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { getLayoutedElements } from '../lib/layout';
 
-export function useGraphState() {
+export function useGraphState(initial = {}) {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
-  const [layoutDirection, setLayoutDirection] = useState('LR');
-  const [showNodeDescriptions, setShowNodeDescriptions] = useState(false);
+  const [layoutDirection, setLayoutDirection] = useState(initial.layoutDirection ?? 'LR');
+  const [showNodeDescriptions, setShowNodeDescriptions] = useState(initial.showNodeDescriptions ?? false);
 
   const nodesRef = useRef([]);
   const edgesRef = useRef([]);

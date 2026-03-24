@@ -2,7 +2,13 @@ import React from 'react';
 import './InputScreen.css';
 import logo from "./assets/logowb.png"
 
-export default function InputScreen({ inputCode, setInputCode, onAnalyze, loading }) {
+const LANGUAGES = [
+  { value: 'english',    label: 'English',    flag: '🇺🇸' },
+  { value: 'portuguese', label: 'Português',  flag: '🇧🇷' },
+  { value: 'spanish',    label: 'Español',    flag: '🇪🇸' },
+];
+
+export default function InputScreen({ inputCode, setInputCode, onAnalyze, loading, language, setLanguage }) {
   return (
     <div className="input-screen-container">
       <div className="input-screen-header">
@@ -19,7 +25,25 @@ export default function InputScreen({ inputCode, setInputCode, onAnalyze, loadin
           </div>
         ) : (
           <div className="input-box-wrapper">
-            <label className="input-label">CODE TO ANALYSE</label>
+            <div className="input-top-bar">
+              <label className="input-label">CODE TO ANALYSE</label>
+
+              {/* Language selector */}
+              <div className="language-selector-group">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.value}
+                    className={`lang-option-btn ${language === lang.value ? 'active' : ''}`}
+                    onClick={() => setLanguage(lang.value)}
+                    title={lang.label}
+                  >
+                    <span className="lang-flag">{lang.flag}</span>
+                    <span className="lang-label">{lang.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="input-textarea-wrapper">
               <textarea
                 className="main-codeInput"
@@ -27,7 +51,7 @@ export default function InputScreen({ inputCode, setInputCode, onAnalyze, loadin
                 onChange={(e) => setInputCode(e.target.value)}
                 spellCheck="false"
                 autoCorrect="off"
-                placeholder="Paste your source code here...&#10;e.g., function start() { ... }"
+                placeholder={"Paste your source code here...\ne.g., function start() { ... }"}
               />
             </div>
             <button
