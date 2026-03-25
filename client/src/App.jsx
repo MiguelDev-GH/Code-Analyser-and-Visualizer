@@ -9,6 +9,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import SettingsPanel from './components/SettingsPanel';
+import ValidationErrorModal from './components/ValidationErrorModal';
 
 import { useGraphState } from './hooks/useGraphState';
 import { useAnalyze } from './hooks/useAnalyze';
@@ -50,7 +51,7 @@ export default function App() {
   const handleSetShowNodeDescriptions = (v) => { setShowNodeDescriptions(v); persist('showNodeDescriptions', v); };
   const handleChangeLayoutDirection = (v) => { changeLayoutDirection(v); persist('layoutDirection', v); };
 
-  const { loading, detectedLanguage, lineCount, codeTitle, isAnalyzed, analyze } = useAnalyze({
+  const { loading, detectedLanguage, lineCount, codeTitle, isAnalyzed, analyze, validationError, clearValidationError } = useAnalyze({
     inputCode, language, layoutDirection, showNodeDescriptions,
   });
 
@@ -74,6 +75,7 @@ export default function App() {
           onAnalyze={handleAnalyze} loading={loading}
           language={language} setLanguage={handleSetLanguage}
         />
+        <ValidationErrorModal error={validationError} onClose={clearValidationError} />
       </div>
     );
   }

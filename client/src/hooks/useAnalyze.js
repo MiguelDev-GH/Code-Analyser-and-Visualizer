@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getLayoutedElements } from '../lib/layout';
+import { validateCode } from '../lib/codeValidator';
 
 export function useAnalyze({ inputCode, language, layoutDirection, showNodeDescriptions }) {
   const [loading, setLoading] = useState(false);
@@ -7,9 +8,20 @@ export function useAnalyze({ inputCode, language, layoutDirection, showNodeDescr
   const [lineCount, setLineCount] = useState(0);
   const [codeTitle, setCodeTitle] = useState('Code #1');
   const [isAnalyzed, setIsAnalyzed] = useState(false);
+  const [validationError, setValidationError] = useState(null);
+
+  const clearValidationError = () => setValidationError(null);
 
   const analyze = async (onSuccess) => {
     if (!inputCode.trim()) return;
+
+    // Client-side validation (JS only) — no AI tokens spent
+    const result = validateCode(inputCode);
+    if (!result.valid) {
+      setValidationError(result);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/analyze`, {
@@ -36,5 +48,5 @@ export function useAnalyze({ inputCode, language, layoutDirection, showNodeDescr
     }
   };
 
-  return { loading, detectedLanguage, lineCount, codeTitle, isAnalyzed, analyze };
+  return { loading, detectedLanguage, lineCount, codeTitle, isAnalyzed, analyze, validationError, clearValidationError };
 }
